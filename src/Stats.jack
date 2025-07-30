@@ -1,0 +1,91 @@
+//  ================================================================================
+//                                   library Stats
+//  ================================================================================
+
+/**
+ *  Player stats like score and lives left.
+ *
+ *  This class contains static data only.
+ *
+ */
+class Stats {
+
+	//  ----------------------------------------------------------------------------
+	//                                STATIC VARIABLES
+	//  ----------------------------------------------------------------------------
+
+	static int score;
+	static int bots_left;
+
+	//  ----------------------------------------------------------------------------
+	//                            INITIALIZATION AND RESET
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Performs initializations after the program has just launched.
+	 *
+	 *  This is currently redundant, because new_game also sets the score to 0.
+	 *  It is a future extension point for when there is a title screen and
+	 *  a high score, and the system won't need to be reset in order to start
+	 *  a new game.
+	 */
+	function void init() {
+		let score = 0;
+		return;
+	}
+
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Resets the score and bots left in preparation for a new game.
+	 */
+	function void new_game() {
+		let score = 0;
+		let bots_left = 3;
+		return;
+	}
+
+	//  ----------------------------------------------------------------------------
+	//                                     SCORE
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Returns the current score.
+	 */
+	function int get_score() {
+		return score;
+	}
+
+	/**
+	 *  Adds the given amount of points to the score.
+	 */
+	function void add_score(int amount) {
+		let score = score + amount;
+		return;
+	}
+
+	//  ----------------------------------------------------------------------------
+	//                                   BOTS LEFT
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Returns the number of bots (lives) left.
+	 */
+	function int get_bots_left() {
+		return bots_left;
+	}
+
+	/**
+	 *  Deducts one from the number of bots left.
+	 *
+	 *  Returns true if there was at least one bot left; false if game over.
+	 */
+	function bool take_bot() {
+		if (bots_left > 0) {
+			let bots_left = bots_left - 1;
+			return true;
+		}
+		return false;
+	}
+
+}   //  ============================================================================

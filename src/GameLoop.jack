@@ -1,0 +1,164 @@
+//  ================================================================================
+//                                   class GameLoop
+//  ================================================================================
+
+/**
+ *  Implementation of the generic parts of the game loop.
+ *
+ *  The actual game loop is implemented in each stage class (for example,
+ *  Stage0.) The stage's game loop owns a GameLoop instance, and calls its
+ *  update method once per frame to do all of the work that is always the same,
+ *  like moving the bot and detecting collisions.
+ *
+ *  The stage-specific loop is in control of the game's speed and player input.
+ *  This allows these things to be different between stages. (A case for
+ *  a different type of player input might be a demo mode, where the game plays
+ *  itself using pre-recorded input instead of reading the keyboard.)
+ *
+ *
+ *  Required Starting Conditions
+ *  ============================
+ *
+ *  The following things must be established before a game can start. This is
+ *  typically done by the stage class.
+ *
+ *  -  The CellState passed to the new() function is initialized with the
+ *     correct floor and ceiling heght.
+ *
+ *  -  The WorldData passed to the new() function is newly initialized with its
+ *     internal pointer at the start of the data (WorldData instances cannot be
+ *     re-used across runs).
+ *
+ *  -  The screen is cleared, and the following items are drawn:
+ *     -  initial floor and ceiling, by Display.draw_floor_ceiling;
+ *     -  status bar text, score, lives, and a full battery meter;
+ *     -  the bot in its initial position.
+ *
+ */
+class GameLoop {
+
+	//  ----------------------------------------------------------------------------
+	//                                     FIELDS
+	//  ----------------------------------------------------------------------------
+
+	// Game state; owned by this instance and disposed with it.
+	//
+	field CellState cell_state;
+	field WorldData world_data;
+	field WorldBrushPool brush_pool;
+	field Bot bot;
+
+	// The current frame
+	//
+	field int frame;
+
+	//  ----------------------------------------------------------------------------
+	//                          INITIALIZATION AND DISPOSAL
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Creates and initializes a GameLoop.
+	 *
+	 *  p_cell_state is initialized by the Stage to have the correct floor and
+	 *  ceiling height. Its ownership is transferred to the GameLoop instance,
+	 *  meaning that it will be disposed automatically along with the GameLoop
+	 *  instance.
+	 *
+	 *  world_data provides the world data (WorldBrush placements) for the
+	 *  stage. Its ownership is also transferred to the GameLoop instance.
+	 */
+	constructor GameLoop new(
+		CellState p_cell_state,
+		WorldData p_world_data
+	) {
+		let cell_state = p_cell_state;
+		let world_data = p_world_data;
+
+		let brush_pool = WorldBrushPool.new();
+		let bot = Bot.new();
+		do bot.reset(cell_state);
+
+		let frame = 0;
+		return this;
+	}
+
+	/**
+	 *  Disposes the GameLoop instance.
+	 */
+	method void dispose() {
+		do bot.dispose();
+		do brush_pool.dispose();
+		do world_data.dispose();
+		do cell_state.dispose();
+		return;
+	}
+
+	//  ----------------------------------------------------------------------------
+	//                                   PROPERTIES
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Returns the current frame.
+	 */
+	method int get_frame() {
+		return frame;
+	}
+
+	/**
+	 *  Returns the bot instance.
+	 */
+	method Bot get_bot() {
+		return bot;
+	}
+
+	//  ----------------------------------------------------------------------------
+	//                                 UPDATE METHOD
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Updates the game to the next frame.
+	 *
+	 *  Set the flip_bot parameter to true to signal the bot to flip its
+	 *  orientation. An actual flip will only happen if this is allowed by the
+	 *  game rules.
+	 *
+	 *  Returns a success or failure result:
+	 *  -1 : the player failed;
+	 *   0 : the game can continue to run;
+	 *   1 : the player reached the end of the stage.
+	 *
+	 *  The update method can be called again as long as the previous call
+	 *  returned 0 or 1. Once it returns -1, the effect of subsequent calls is
+	 *  undefined.
+	 */
+	method int update(bool flip_bot) {
+		var int failure_state;
+
+		do brush_pool.update_all(frame, cell_state);
+		if (flip_bot) {
+			do bot.flip();
+		}
+		do bot.update(frame, cell_state);
+
+		let failure_state = bot.test_failure(cell_state);
+		if (failure_state = 1) {
+			do Display.draw_obstacle_hit_message();
+			return -1;
+		}
+		if (failure_state = 2) {
+			do Display.draw_battery_drained_message();
+			return -1;
+		}
+
+		// Add score for progressing through the game
+		if ((frame & 31) = 0) {
+			do Stats.add_score(1);
+		}
+
+		let frame = frame + 1;
+
+		// Prepare data for the next frame. Returns 0 or 1.
+		return world_data.update(frame, brush_pool);
+	}
+
+}   //  ============================================================================

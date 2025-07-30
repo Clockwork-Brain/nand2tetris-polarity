@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta name="color-scheme" content="dark light" />
+
+	<title> Polarity Map Tool </title>
+
+	<style>
+
+		html {
+			font-family: monospace;
+			font-size: 16px;
+			tab-size: 4;
+		}
+
+		.canvas {
+			display: grid;
+			grid-template-columns: min-content 1fr;
+			margin: 4em 0;
+		}
+
+		.palette {
+			display: flex;
+			flex-direction: column;
+			align-self: center;
+			gap: 8px;
+			margin-right: 1em;
+		}
+
+		.palette * {
+			white-space: pre;
+			text-align: left;
+		}
+
+		#map {
+			display: flex;
+			overflow-x: scroll;
+			user-select: none;
+		}
+
+		#map div {
+			display: flex;
+			flex-direction: column;
+			border-bottom: solid 1px;
+		}
+
+		#map div.grid {
+			margin: 2em 0;
+		}
+
+		#map span {
+			width: 1.5em;
+			height: 1.5em;
+			text-align: center;
+			border-style: solid solid none none;
+			border-width: 1px;
+		}
+
+		.buttons {
+			margin: 2em;
+		}
+
+		.buttons button {
+			margin-right: 8em;
+			width: 16em;
+			height: 3em;
+		}
+
+	</style>
+
+	<script>
+		"use strict";
+
+		let current_cell_type;
+
+		function load_reltext() {
+			map_clear();
+			append_reltext();
+		}
+
+		function append_reltext() {
+			let reltext_input = document.getElementById("reltext").value;
+			let data = parse_reltext(reltext_input);
+
+			for (let [count, brushes] of data) {
+				let column = map_add_column();
+				for (let [row, cell_type] of brushes) {
+					column.children[1].children[row].innerText = cell_to_text(cell_type);
+				}
+				for (let i = 1; i < count; ++i) {
+					map_add_column();
+				}
+			}
+		}
+
+		function parse_reltext(text) {
+			let lines = [];
+			for (let line of text.split('\n')) {
+				if (line.trim()) {
+					lines.push('[' + line + ']');
+				}
+			}
+			return JSON.parse('[' + lines.join(',') + ']');
+		}
+
+		function map_clear() {
+			document.getElementById("map").innerText = "";
+		}
+
+		function map_add_column() {
+			let map = document.getElementById("map");
+			let last_column = map.children[map.childElementCount - 1];
+			let new_column;
+			if (!last_column) {
+				map.innerHTML = (
+					"<div>"
+					+ "<div class='controls'> <span>-</span> </div>"
+					+ "<div class='grid'>" + "<span></span>".repeat(15) + "</div>"
+					+ "<div class='controls'> <span>+</span> </div>"
+					+ "</div>"
+				);
+				new_column = map.children[0];
+			} else {
+				new_column = map_duplicate_column(
+					map.children[map.childElementCount - 1]
+				);
+			}
+
+			add_column_events(new_column);
+			return new_column;
+		}
+
+		function add_column_events(column) {
+			let minus_button = column.children[0].children[0];
+			let cells_grid = column.children[1];
+			let plus_button = column.children[2].children[0];
+
+			minus_button.onclick = () => column.remove();
+			plus_button.onclick = () => map_duplicate_column(column);
+
+			for (let cell of cells_grid.children) {
+				add_cell_events(cell);
+			}
+		}
+
+		function add_cell_events(cell) {
+			let paint = function(evt) {
+				if (evt.buttons == 1) {
+					cell.innerText = current_cell_type;
+				}
+			};
+			cell.onmousedown = paint;
+			cell.onmousemove = paint;
+		}
+
+		function map_duplicate_column(src_column) {
+			let map = document.getElementById("map");
+			let new_column = document.createElement("div");
+			new_column.innerHTML = src_column.innerHTML;
+			map.insertBefore(new_column, src_column);
+			add_column_events(new_column);
+			return src_column;
+		}
+
+		function cell_to_text(cell_type) {
+			return {
+				0: " ",
+				1: "█",
+				3: "🮙",
+				2: "◀",
+				4: "▲",
+				6: "▼",
+				8: "‡",
+				10: "§",
+			}[cell_type];
+		}
+
+		function text_to_cell(text) {
+			return {
+				"": 0,
+				"█": 1,
+				"🮙": 3,
+				"◀": 2,
+				"▲": 4,
+				"▼": 6,
+				"‡": 8,
+				"§": 10,
+			}[text.trim()];
+		}
+
+		function output_text() {
+			let data = collect_brush_data();
+			output_reltext(data);
+			output_jack(data);
+		}
+
+		function collect_brush_data() {
+			let data = [];
+			let map = document.getElementById("map");
+			let prev_cells = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+
+			for (let column of map.children) {
+				let cur_cells = [];
+				for (let cell of column.children[1].children) {
+					cur_cells.push(text_to_cell(cell.innerText));
+				}
+
+				let brushes = [];
+				for (let i = 0; i < 15; ++i) {
+					if (prev_cells[i] != cur_cells[i]) {
+						brushes.push([i, cur_cells[i]]);
+					}
+				}
+				if (brushes.length > 0) {
+					data.push([1, brushes]);
+				} else {
+					++data[data.length - 1][0];
+				}
+				prev_cells = cur_cells;
+			}
+			return data;
+		}
+
+		function output_reltext(data) {
+			let reltext = [];
+			for (let [count, brushes] of data) {
+				reltext.push(`${count}, ${JSON.stringify(brushes)}\n`);
+			}
+			document.getElementById("reltext").value = reltext.join('');
+		}
+
+		function output_jack(data) {
+			let brush_columns = [];
+			function get_brush_i(column_i) {
+				for (let i in brush_columns) {
+					if (brush_columns[i] <= column_i - 32) {
+						brush_columns[i] = column_i;
+						return (+i);
+					}
+				}
+				brush_columns.push(column_i);
+				return brush_columns.length - 1;
+			}
+
+			let array_writes = [];
+			function add(value) {
+				let i = array_writes.length;
+				array_writes.push(`\t\tlet a[${i}] = ${value};\n`);
+			}
+
+			let current_column = 0;
+			for (let [n_columns, brushes] of data) {
+				add(10002 + 2 * current_column);
+				for (let [row_i, cell_type] of brushes) {
+					add(get_brush_i(current_column));
+					add(row_i);
+					add(cell_type);
+				}
+				current_column += n_columns;
+			}
+			add(10002 + 2 * current_column);
+			add(10001);
+
+			document.getElementById("jack").value = (
+				`\t// Peak WorldBrush use: ${brush_columns.length}\n`
+				+ `\tfunction Array get_world_data() {\n`
+				+ `\t\tvar Array a;\n`
+				+ `\t\tlet a = Array.new(${array_writes.length});\n`
+				+ array_writes.join('')
+				+ `\t\treturn a;\n`
+				+ `\t}\n`
+			);
+		}
+
+		function set_cell_type(t) {
+			current_cell_type = t;
+			document.getElementById("current").innerText = `current: [${t}]`;
+		}
+
+	</script>
+
+</head>
+<body onload="load_reltext(); /*output_text();*/ set_cell_type('█')">
+
+	<h1> Polarity Map Tool </h1>
+
+	<p>
+	This tool creates the compressed data that defines the world of the
+	Polarity game.
+	</p>
+
+	<p>
+	Pick a cell type from the menu on the left, then draw on the grid with the
+	mouse. Use the + and - buttons to add and remove columns.
+	</p>
+
+	<div class="canvas">
+		<div class="palette">
+			<div id="current"></div>
+			<button onclick="set_cell_type(' ')"> &nbsp; empty  </button>
+			<button onclick="set_cell_type('█')"> █ wall        </button>
+			<button onclick="set_cell_type('🮙')"> 🮙 charger     </button>
+			<button onclick="set_cell_type('◀')"> ◀ spikes Left </button>
+			<button onclick="set_cell_type('▲')"> ▲ spikes Up   </button>
+			<button onclick="set_cell_type('▼')"> ▼ spikes Down </button>
+			<button onclick="set_cell_type('‡')"> ‡ small chip  </button>
+			<button onclick="set_cell_type('§')"> § large chip  </button>
+		</div>
+		<div id="map"></div>
+	</div>
+
+	<p>
+	Press the "output" button to generate code.
+	</p>
+
+	<ul>
+		<li>
+			The box on the right contains Jack code for incorporating into the
+			game.
+		</li>
+		<li>
+			The one on the left contains an internal representation which you
+			can save to a text file, and load again later using the "Replace"
+			or "Append" buttons below the text boxes.
+		</li>
+	</ul>
+
+	<div class="buttons">
+		<button onclick="output_text()">Output</button>
+	</div>
+	<textarea id="reltext" cols="80" rows="24">
+
+		1, [[0,1],[13,8],[14,1]]
+		2, [[13,0]]
+		1, [[12,8]]
+		8, [[12,0]]
+		2, [[1,8]]
+		6, [[1,0]]
+		1, [[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[7,2]]
+		2, [[1,1],[2,1],[3,1],[4,1],[5,1],[6,1],[7,1]]
+		14, [[8,6],[14,3]]
+		1, [[8,0],[14,1]]
+		1, [[8,10]]
+		4, [[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0],[8,0]]
+		1, [[1,8]]
+		1, [[1,0],[6,2],[7,2],[8,2],[9,2],[10,2],[11,2],[12,2],[13,2]]
+		2, [[6,1],[7,1],[8,1],[9,1],[10,1],[11,1],[12,1],[13,1]]
+		1, [[5,8]]
+		3, [[5,0]]
+		1, [[5,4]]
+		4, [[5,0]]
+		1, [[1,6]]
+		2, [[6,0],[7,0]]
+		8, [[0,3],[1,0]]
+		3, [[8,0],[9,0],[10,0],[11,0],[12,0],[13,0]]
+		1, [[8,2],[9,2]]
+		1, [[8,1],[9,1],[10,6],[13,10]]
+		2, [[10,0],[13,0]]
+		1, [[10,10],[13,4]]
+		2, [[10,0],[13,0]]
+		1, [[10,6],[13,10]]
+		1, [[6,8],[10,0],[13,0]]
+		1, [[6,0]]
+		1, [[0,1],[6,8],[13,4]]
+		1, [[1,2],[2,2],[3,2],[6,0],[13,0]]
+		3, [[1,1],[2,1],[3,1],[4,6],[8,0],[9,0]]
+		1, [[13,8]]
+		2, [[13,0]]
+		3, [[4,1]]
+		1, [[10,2],[11,2],[12,2],[13,2]]
+		2, [[10,1],[11,1],[12,1],[13,1]]
+
+		20, [[0,1],[1,1],[2,1],[3,1],[4,1],[10,3],[11,1],[12,1],[13,1],[14,1]]
+		2, [[4,0],[10,0]]
+		1, [[1,0],[2,0],[3,0],[11,0],[12,0],[13,0]]
+		1, [[1,8]]
+		2, [[1,0]]
+		1, [[7,8]]
+		2, [[7,0]]
+		1, [[13,8]]
+		2, [[13,0]]
+		1, [[7,8]]
+		2, [[7,0]]
+		1, [[1,8]]
+		2, [[1,0]]
+		1, [[7,8]]
+		2, [[7,0]]
+		1, [[13,8]]
+		3, [[13,0]]
+		3, [[1,1],[2,1],[3,1],[10,1],[11,1],[12,1],[13,1]]
+		4, [[10,3]]
+		2, [[3,6]]
+		6, [[3,3],[10,4]]
+		2, [[3,6],[10,3]]
+		4, [[3,1],[4,1]]
+		6, [[10,4]]
+		6, [[0,6],[1,0],[2,0],[3,0],[4,0],[10,1]]
+		1, [[2,2],[4,2]]
+		4, [[0,1],[1,1],[2,1],[3,1],[4,1]]
+		1, [[7,10]]
+		1, [[4,0],[7,0],[10,0]]
+		1, [[3,0],[11,0]]
+		1, [[2,0],[12,0]]
+		1, [[1,0],[13,0]]
+		1, [[7,2]]
+		3, [[7,1],[8,8]]
+		5, [[8,0]]
+		2, [[14,3]]
+		1, [[14,1]]
+		1, [[1,2]]
+		1, [[1,1],[2,2],[5,2],[6,2],[8,6]]
+		1, [[2,1],[3,2],[5,1],[6,1],[8,0]]
+		1, [[3,1],[4,2],[8,10]]
+		1, [[4,1],[8,6]]
+		2, [[8,0]]
+		2, [[14,3]]
+		3, [[14,1]]
+		1, [[8,6]]
+		1, [[8,10]]
+		1, [[8,0]]
+		1, [[8,6]]
+		1, [[8,0]]
+		9, [[0,6],[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0]]
+		1, [[2,2],[4,2]]
+
+		20, [[0,1],[1,1],[2,1],[3,1],[4,3],[10,1],[11,1],[12,1],[13,1],[14,1]]
+		4, [[4,1]]
+		1, [[7,10]]
+		1, [[4,0],[7,0],[10,0]]
+		1, [[3,0],[11,0]]
+		1, [[2,0],[12,0]]
+		1, [[1,0],[13,0]]
+		1, [[7,2]]
+		3, [[7,1],[8,8]]
+		5, [[8,0]]
+		2, [[14,3]]
+		1, [[14,1]]
+		1, [[1,2]]
+		1, [[1,1],[2,2],[5,8],[6,8],[8,6]]
+		1, [[2,1],[3,2],[5,0],[6,0],[8,0]]
+		1, [[3,1],[4,2]]
+		1, [[4,1],[8,6]]
+		1, [[8,0]]
+		1, [[9,2],[11,2],[13,2]]
+		2, [[4,0],[8,1],[9,1],[10,1],[11,1],[12,1],[13,1]]
+		8, [[3,3]]
+		2, [[0,6],[1,0],[2,0],[3,0],[7,0],[8,0],[9,0],[10,0],[11,0],[12,0],[13,0],[14,4]]
+		2, [[12,1]]
+		3, [[3,1]]
+		3, [[12,0]]
+		2, [[3,0],[8,3]]
+		2, [[3,1],[8,0]]
+		1, [[3,0]]
+		6, [[11,1]]
+		1, [[0,3]]
+		1, [[1,10],[2,10]]
+		1, [[1,0],[2,0]]
+		3, [[0,6]]
+		3, [[11,3]]
+		1, [[11,0]]
+		2, [[0,1]]
+		1, [[14,1]]
+		1, [[7,2],[9,2],[11,2],[13,2]]
+		1, [[1,2],[3,2],[7,1],[8,1],[9,1],[10,1],[11,1],[12,1],[13,1]]
+		1, [[1,1],[2,1],[3,1]]
+
+		2, [[0,1],[1,1],[2,1],[3,3],[7,3],[8,1],[9,1],[10,1],[11,1],[12,1],[13,1],[14,1]]
+		28, [[10,0],[11,0],[12,0]]
+		2, [[10,1],[11,1],[12,1]]
+
+	</textarea>
+	<textarea id="jack" cols="80" rows="24"></textarea>
+	<div class="buttons">
+		<button onclick="load_reltext()">Replace</button>
+		<button onclick="append_reltext()">Append</button>
+	</div>
+
+</body>
+</html>

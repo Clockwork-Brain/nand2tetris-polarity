@@ -1,0 +1,553 @@
+//  ================================================================================
+//                                  library Sprites
+//  ================================================================================
+
+/**
+ *  Library of game sprites.
+ *
+ *  For the purpose of drawing sprites, the screen is divided into 16 rows of 32
+ *  cells, each of which is a 16 pixel square.
+ *
+ *  Most sprites fill one cell, with the exception of the bot sprites which are
+ *  two cells tall.
+ *
+ *
+ *  Sprite Functions
+ *  ================
+ *
+ *  -  draw_empty                 : an empty (white) square
+ *  -  draw_wall                  : a wall
+ *  -  draw_charger_off           : an inactive charger
+ *  -  draw_charger_on            : an active charger (the bot is standing on it)
+ *  -  draw_spikes_left           : a spike pointing left
+ *  -  draw_spikes_up             : a spike pointing up
+ *  -  draw_spikes_down           : a spike pointing down
+ *  -  draw_chip_small            : a small chip
+ *  -  draw_chip_big              : a large chip
+ *  -  draw_bot_down_frame0       : the bot (2 cells tall) walking frame 0
+ *  -  draw_bot_down_frame1       : the bot (2 cells tall) walking frame 1
+ *  -  draw_bot_up_frame0         : the bot (2 cells tall) walking frame 0
+ *  -  draw_bot_up_frame1         : the bot (2 cells tall) walking frame 1
+ *  -  draw_bot_down_broken       : the bot (2 cells tall), broken
+ *  -  draw_bot_up_broken         : the bot (2 cells tall), broken
+ *  -  draw_bot_down_face_drained : the head part of the bot with eyes closed
+ *  -  draw_bot_up_face_drained   : the head part of the bot with eyes closed
+ *  -  draw_bot_life_icon         : a bot head life icon for the status bar
+ *
+ *  The bot sprites exist in two versions: one for when the bot is walking on
+ *  the floor (down) and one for when it is walking on the ceiling (up).
+ *
+ */
+class Sprites {
+
+	/** Draws an empty (white) square. */
+	function void draw_empty(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, 0);
+		do Memory.poke(mem_address +32, 0);
+		do Memory.poke(mem_address +64, 0);
+		do Memory.poke(mem_address +96, 0);
+		do Memory.poke(mem_address +128, 0);
+		do Memory.poke(mem_address +160, 0);
+		do Memory.poke(mem_address +192, 0);
+		do Memory.poke(mem_address +224, 0);
+		do Memory.poke(mem_address +256, 0);
+		do Memory.poke(mem_address +288, 0);
+		do Memory.poke(mem_address +320, 0);
+		do Memory.poke(mem_address +352, 0);
+		do Memory.poke(mem_address +384, 0);
+		do Memory.poke(mem_address +416, 0);
+		do Memory.poke(mem_address +448, 0);
+		do Memory.poke(mem_address +480, 0);
+		return;
+	}
+
+	/** Draws a wall. */
+	function void draw_wall(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, 0);
+		do Memory.poke(mem_address +32, ~32767);
+		do Memory.poke(mem_address +64, -10924);
+		do Memory.poke(mem_address +96, -5464);
+		do Memory.poke(mem_address +128, -10924);
+		do Memory.poke(mem_address +160, -5464);
+		do Memory.poke(mem_address +192, -2);
+		do Memory.poke(mem_address +224, -1);
+		do Memory.poke(mem_address +256, 0);
+		do Memory.poke(mem_address +288, 128);
+		do Memory.poke(mem_address +320, 21717);
+		do Memory.poke(mem_address +352, -22294);
+		do Memory.poke(mem_address +384, 21717);
+		do Memory.poke(mem_address +416, -22294);
+		do Memory.poke(mem_address +448, -257);
+		do Memory.poke(mem_address +480, -1);
+		return;
+	}
+
+	/** Draws an inactive charger. */
+	function void draw_charger_off(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, -1);
+		do Memory.poke(mem_address +32, -1);
+		do Memory.poke(mem_address +64, -16381);
+		do Memory.poke(mem_address +96, -16125);
+		do Memory.poke(mem_address +128, -15997);
+		do Memory.poke(mem_address +160, -16253);
+		do Memory.poke(mem_address +192, -16189);
+		do Memory.poke(mem_address +224, -14397);
+		do Memory.poke(mem_address +256, -15389);
+		do Memory.poke(mem_address +288, -15613);
+		do Memory.poke(mem_address +320, -16125);
+		do Memory.poke(mem_address +352, -15997);
+		do Memory.poke(mem_address +384, -16253);
+		do Memory.poke(mem_address +416, -16381);
+		do Memory.poke(mem_address +448, -1);
+		do Memory.poke(mem_address +480, -1);
+		return;
+	}
+
+	/** Draws an active charger (the bot is standing on it). */
+	function void draw_charger_on(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, -1);
+		do Memory.poke(mem_address +32, -32767);
+		do Memory.poke(mem_address +64, -16387);
+		do Memory.poke(mem_address +96, -16643);
+		do Memory.poke(mem_address +128, -16771);
+		do Memory.poke(mem_address +160, -16515);
+		do Memory.poke(mem_address +192, -16579);
+		do Memory.poke(mem_address +224, -18371);
+		do Memory.poke(mem_address +256, -17379);
+		do Memory.poke(mem_address +288, -17155);
+		do Memory.poke(mem_address +320, -16643);
+		do Memory.poke(mem_address +352, -16771);
+		do Memory.poke(mem_address +384, -16515);
+		do Memory.poke(mem_address +416, -16387);
+		do Memory.poke(mem_address +448, -32767);
+		do Memory.poke(mem_address +480, -1);
+		return;
+	}
+
+	/** Draws a spike pointing left. */
+	function void draw_spikes_left(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, 0);
+		do Memory.poke(mem_address +32, 0);
+		do Memory.poke(mem_address +64, -16384);
+		do Memory.poke(mem_address +96, -4096);
+		do Memory.poke(mem_address +128, -1024);
+		do Memory.poke(mem_address +160, -256);
+		do Memory.poke(mem_address +192, -64);
+		do Memory.poke(mem_address +224, -16);
+		do Memory.poke(mem_address +256, -4);
+		do Memory.poke(mem_address +288, -16);
+		do Memory.poke(mem_address +320, -64);
+		do Memory.poke(mem_address +352, -256);
+		do Memory.poke(mem_address +384, -1024);
+		do Memory.poke(mem_address +416, -4096);
+		do Memory.poke(mem_address +448, -16384);
+		do Memory.poke(mem_address +480, 0);
+		return;
+	}
+
+	/** Draws a spike pointing up. */
+	function void draw_spikes_up(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, 0);
+		do Memory.poke(mem_address +32, 0);
+		do Memory.poke(mem_address +64, 128);
+		do Memory.poke(mem_address +96, 128);
+		do Memory.poke(mem_address +128, 448);
+		do Memory.poke(mem_address +160, 448);
+		do Memory.poke(mem_address +192, 992);
+		do Memory.poke(mem_address +224, 992);
+		do Memory.poke(mem_address +256, 2032);
+		do Memory.poke(mem_address +288, 2032);
+		do Memory.poke(mem_address +320, 4088);
+		do Memory.poke(mem_address +352, 4088);
+		do Memory.poke(mem_address +384, 8188);
+		do Memory.poke(mem_address +416, 8188);
+		do Memory.poke(mem_address +448, 16382);
+		do Memory.poke(mem_address +480, 16382);
+		return;
+	}
+
+	/** Draws a spike pointing down. */
+	function void draw_spikes_down(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, 16382);
+		do Memory.poke(mem_address +32, 16382);
+		do Memory.poke(mem_address +64, 8188);
+		do Memory.poke(mem_address +96, 8188);
+		do Memory.poke(mem_address +128, 4088);
+		do Memory.poke(mem_address +160, 4088);
+		do Memory.poke(mem_address +192, 2032);
+		do Memory.poke(mem_address +224, 2032);
+		do Memory.poke(mem_address +256, 992);
+		do Memory.poke(mem_address +288, 992);
+		do Memory.poke(mem_address +320, 448);
+		do Memory.poke(mem_address +352, 448);
+		do Memory.poke(mem_address +384, 128);
+		do Memory.poke(mem_address +416, 128);
+		do Memory.poke(mem_address +448, 0);
+		do Memory.poke(mem_address +480, 0);
+		return;
+	}
+
+	/** Draws a small chip. */
+	function void draw_chip_small(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, 0);
+		do Memory.poke(mem_address +32, 0);
+		do Memory.poke(mem_address +64, 0);
+		do Memory.poke(mem_address +96, 48);
+		do Memory.poke(mem_address +128, 248);
+		do Memory.poke(mem_address +160, 1020);
+		do Memory.poke(mem_address +192, 4094);
+		do Memory.poke(mem_address +224, 16378);
+		do Memory.poke(mem_address +256, 16362);
+		do Memory.poke(mem_address +288, 12200);
+		do Memory.poke(mem_address +320, 1696);
+		do Memory.poke(mem_address +352, 640);
+		do Memory.poke(mem_address +384, 512);
+		do Memory.poke(mem_address +416, 0);
+		do Memory.poke(mem_address +448, 0);
+		do Memory.poke(mem_address +480, 0);
+		return;
+	}
+
+	/** Draws a large chip. */
+	function void draw_chip_big(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, 0);
+		do Memory.poke(mem_address +32, 672);
+		do Memory.poke(mem_address +64, 672);
+		do Memory.poke(mem_address +96, 2032);
+		do Memory.poke(mem_address +128, 2056);
+		do Memory.poke(mem_address +160, 14350);
+		do Memory.poke(mem_address +192, 2504);
+		do Memory.poke(mem_address +224, 14798);
+		do Memory.poke(mem_address +256, 2504);
+		do Memory.poke(mem_address +288, 14350);
+		do Memory.poke(mem_address +320, 2056);
+		do Memory.poke(mem_address +352, 2032);
+		do Memory.poke(mem_address +384, 672);
+		do Memory.poke(mem_address +416, 672);
+		do Memory.poke(mem_address +448, 0);
+		do Memory.poke(mem_address +480, 0);
+		return;
+	}
+
+	/** Draws the bot (2 cells tall) walking frame 0. */
+	function void draw_bot_down_frame0(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, 448);
+		do Memory.poke(mem_address +32, 128);
+		do Memory.poke(mem_address +64, 128);
+		do Memory.poke(mem_address +96, 8184);
+		do Memory.poke(mem_address +128, 16380);
+		do Memory.poke(mem_address +160, 12796);
+		do Memory.poke(mem_address +192, 15612);
+		do Memory.poke(mem_address +224, 15612);
+		do Memory.poke(mem_address +256, 12796);
+		do Memory.poke(mem_address +288, 16380);
+		do Memory.poke(mem_address +320, 16380);
+		do Memory.poke(mem_address +352, 16380);
+		do Memory.poke(mem_address +384, 8184);
+		do Memory.poke(mem_address +416, 448);
+		do Memory.poke(mem_address +448, 448);
+		do Memory.poke(mem_address +480, 2032);
+		do Memory.poke(mem_address +512, 4088);
+		do Memory.poke(mem_address +544, 4088);
+		do Memory.poke(mem_address +576, 4088);
+		do Memory.poke(mem_address +608, 4088);
+		do Memory.poke(mem_address +640, 4088);
+		do Memory.poke(mem_address +672, 4088);
+		do Memory.poke(mem_address +704, 4088);
+		do Memory.poke(mem_address +736, 2032);
+		do Memory.poke(mem_address +768, 992);
+		do Memory.poke(mem_address +800, 448);
+		do Memory.poke(mem_address +832, 448);
+		do Memory.poke(mem_address +864, 448);
+		do Memory.poke(mem_address +896, 448);
+		do Memory.poke(mem_address +928, 448);
+		do Memory.poke(mem_address +960, 992);
+		do Memory.poke(mem_address +992, 2016);
+		return;
+	}
+
+	/** Draws the bot (2 cells tall) walking frame 1. */
+	function void draw_bot_down_frame1(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, 0);
+		do Memory.poke(mem_address +32, 0);
+		do Memory.poke(mem_address +64, 448);
+		do Memory.poke(mem_address +96, 128);
+		do Memory.poke(mem_address +128, 128);
+		do Memory.poke(mem_address +160, 8184);
+		do Memory.poke(mem_address +192, 16380);
+		do Memory.poke(mem_address +224, 12796);
+		do Memory.poke(mem_address +256, 15612);
+		do Memory.poke(mem_address +288, 15612);
+		do Memory.poke(mem_address +320, 12796);
+		do Memory.poke(mem_address +352, 16380);
+		do Memory.poke(mem_address +384, 16380);
+		do Memory.poke(mem_address +416, 16380);
+		do Memory.poke(mem_address +448, 8184);
+		do Memory.poke(mem_address +480, 448);
+		do Memory.poke(mem_address +512, 448);
+		do Memory.poke(mem_address +544, 2032);
+		do Memory.poke(mem_address +576, 4088);
+		do Memory.poke(mem_address +608, 4088);
+		do Memory.poke(mem_address +640, 4088);
+		do Memory.poke(mem_address +672, 4088);
+		do Memory.poke(mem_address +704, 4088);
+		do Memory.poke(mem_address +736, 4088);
+		do Memory.poke(mem_address +768, 4088);
+		do Memory.poke(mem_address +800, 2032);
+		do Memory.poke(mem_address +832, 4080);
+		do Memory.poke(mem_address +864, 7226);
+		do Memory.poke(mem_address +896, -2017);
+		do Memory.poke(mem_address +928, 28686);
+		do Memory.poke(mem_address +960, 14348);
+		do Memory.poke(mem_address +992, 4104);
+		return;
+	}
+
+	/** Draws the bot (2 cells tall) walking frame 0. */
+	function void draw_bot_up_frame0(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, 2016);
+		do Memory.poke(mem_address +32, 992);
+		do Memory.poke(mem_address +64, 448);
+		do Memory.poke(mem_address +96, 448);
+		do Memory.poke(mem_address +128, 448);
+		do Memory.poke(mem_address +160, 448);
+		do Memory.poke(mem_address +192, 448);
+		do Memory.poke(mem_address +224, 992);
+		do Memory.poke(mem_address +256, 2032);
+		do Memory.poke(mem_address +288, 4088);
+		do Memory.poke(mem_address +320, 4088);
+		do Memory.poke(mem_address +352, 4088);
+		do Memory.poke(mem_address +384, 4088);
+		do Memory.poke(mem_address +416, 4088);
+		do Memory.poke(mem_address +448, 4088);
+		do Memory.poke(mem_address +480, 4088);
+		do Memory.poke(mem_address +512, 2032);
+		do Memory.poke(mem_address +544, 448);
+		do Memory.poke(mem_address +576, 448);
+		do Memory.poke(mem_address +608, 8184);
+		do Memory.poke(mem_address +640, 16380);
+		do Memory.poke(mem_address +672, 16380);
+		do Memory.poke(mem_address +704, 16380);
+		do Memory.poke(mem_address +736, 12796);
+		do Memory.poke(mem_address +768, 15612);
+		do Memory.poke(mem_address +800, 15612);
+		do Memory.poke(mem_address +832, 12796);
+		do Memory.poke(mem_address +864, 16380);
+		do Memory.poke(mem_address +896, 8184);
+		do Memory.poke(mem_address +928, 128);
+		do Memory.poke(mem_address +960, 128);
+		do Memory.poke(mem_address +992, 448);
+		return;
+	}
+
+	/** Draws the bot (2 cells tall) walking frame 1. */
+	function void draw_bot_up_frame1(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, 4104);
+		do Memory.poke(mem_address +32, 14348);
+		do Memory.poke(mem_address +64, 28686);
+		do Memory.poke(mem_address +96, -2017);
+		do Memory.poke(mem_address +128, 7226);
+		do Memory.poke(mem_address +160, 4080);
+		do Memory.poke(mem_address +192, 2032);
+		do Memory.poke(mem_address +224, 4088);
+		do Memory.poke(mem_address +256, 4088);
+		do Memory.poke(mem_address +288, 4088);
+		do Memory.poke(mem_address +320, 4088);
+		do Memory.poke(mem_address +352, 4088);
+		do Memory.poke(mem_address +384, 4088);
+		do Memory.poke(mem_address +416, 4088);
+		do Memory.poke(mem_address +448, 2032);
+		do Memory.poke(mem_address +480, 448);
+		do Memory.poke(mem_address +512, 448);
+		do Memory.poke(mem_address +544, 8184);
+		do Memory.poke(mem_address +576, 16380);
+		do Memory.poke(mem_address +608, 16380);
+		do Memory.poke(mem_address +640, 16380);
+		do Memory.poke(mem_address +672, 12796);
+		do Memory.poke(mem_address +704, 15612);
+		do Memory.poke(mem_address +736, 15612);
+		do Memory.poke(mem_address +768, 12796);
+		do Memory.poke(mem_address +800, 16380);
+		do Memory.poke(mem_address +832, 8184);
+		do Memory.poke(mem_address +864, 128);
+		do Memory.poke(mem_address +896, 128);
+		do Memory.poke(mem_address +928, 448);
+		do Memory.poke(mem_address +960, 0);
+		do Memory.poke(mem_address +992, 0);
+		return;
+	}
+
+	/** Draws the bot (2 cells tall), broken. */
+	function void draw_bot_down_broken(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, 192);
+		do Memory.poke(mem_address +32, 96);
+		do Memory.poke(mem_address +64, 128);
+		do Memory.poke(mem_address +96, 128);
+		do Memory.poke(mem_address +128, 8164);
+		do Memory.poke(mem_address +160, 16382);
+		do Memory.poke(mem_address +192, 16382);
+		do Memory.poke(mem_address +224, 13782);
+		do Memory.poke(mem_address +256, 15342);
+		do Memory.poke(mem_address +288, 13782);
+		do Memory.poke(mem_address +320, 8190);
+		do Memory.poke(mem_address +352, 16382);
+		do Memory.poke(mem_address +384, 16382);
+		do Memory.poke(mem_address +416, 8172);
+		do Memory.poke(mem_address +448, 448);
+		do Memory.poke(mem_address +480, 448);
+		do Memory.poke(mem_address +512, 2032);
+		do Memory.poke(mem_address +544, 4088);
+		do Memory.poke(mem_address +576, 4088);
+		do Memory.poke(mem_address +608, 2040);
+		do Memory.poke(mem_address +640, 2032);
+		do Memory.poke(mem_address +672, 4088);
+		do Memory.poke(mem_address +704, 4088);
+		do Memory.poke(mem_address +736, 4088);
+		do Memory.poke(mem_address +768, 2032);
+		do Memory.poke(mem_address +800, 4088);
+		do Memory.poke(mem_address +832, 7196);
+		do Memory.poke(mem_address +864, 30735);
+		do Memory.poke(mem_address +896, 28679);
+		do Memory.poke(mem_address +928, 14350);
+		do Memory.poke(mem_address +960, 4100);
+		do Memory.poke(mem_address +992, 0);
+		return;
+	}
+
+	/** Draws the bot (2 cells tall), broken. */
+	function void draw_bot_up_broken(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, 0);
+		do Memory.poke(mem_address +32, 4100);
+		do Memory.poke(mem_address +64, 14350);
+		do Memory.poke(mem_address +96, 28679);
+		do Memory.poke(mem_address +128, 30735);
+		do Memory.poke(mem_address +160, 7196);
+		do Memory.poke(mem_address +192, 4088);
+		do Memory.poke(mem_address +224, 2032);
+		do Memory.poke(mem_address +256, 4088);
+		do Memory.poke(mem_address +288, 4088);
+		do Memory.poke(mem_address +320, 4088);
+		do Memory.poke(mem_address +352, 2032);
+		do Memory.poke(mem_address +384, 2040);
+		do Memory.poke(mem_address +416, 4088);
+		do Memory.poke(mem_address +448, 4088);
+		do Memory.poke(mem_address +480, 2032);
+		do Memory.poke(mem_address +512, 448);
+		do Memory.poke(mem_address +544, 448);
+		do Memory.poke(mem_address +576, 8172);
+		do Memory.poke(mem_address +608, 16382);
+		do Memory.poke(mem_address +640, 16382);
+		do Memory.poke(mem_address +672, 8190);
+		do Memory.poke(mem_address +704, 13782);
+		do Memory.poke(mem_address +736, 15342);
+		do Memory.poke(mem_address +768, 13782);
+		do Memory.poke(mem_address +800, 16382);
+		do Memory.poke(mem_address +832, 16382);
+		do Memory.poke(mem_address +864, 8164);
+		do Memory.poke(mem_address +896, 128);
+		do Memory.poke(mem_address +928, 128);
+		do Memory.poke(mem_address +960, 96);
+		do Memory.poke(mem_address +992, 192);
+		return;
+	}
+
+	/** Draws the head part of the bot with eyes closed. */
+	function void draw_bot_down_face_drained(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, 0);
+		do Memory.poke(mem_address +32, 0);
+		do Memory.poke(mem_address +64, 448);
+		do Memory.poke(mem_address +96, 128);
+		do Memory.poke(mem_address +128, 128);
+		do Memory.poke(mem_address +160, 8184);
+		do Memory.poke(mem_address +192, 16380);
+		do Memory.poke(mem_address +224, 16380);
+		do Memory.poke(mem_address +256, 16124);
+		do Memory.poke(mem_address +288, 12796);
+		do Memory.poke(mem_address +320, 16380);
+		do Memory.poke(mem_address +352, 16380);
+		do Memory.poke(mem_address +384, 16380);
+		do Memory.poke(mem_address +416, 16380);
+		do Memory.poke(mem_address +448, 8184);
+		do Memory.poke(mem_address +480, 448);
+		return;
+	}
+
+	/** Draws the head part of the bot with eyes closed. */
+	function void draw_bot_up_face_drained(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, 448);
+		do Memory.poke(mem_address +32, 8184);
+		do Memory.poke(mem_address +64, 16380);
+		do Memory.poke(mem_address +96, 16380);
+		do Memory.poke(mem_address +128, 16380);
+		do Memory.poke(mem_address +160, 16380);
+		do Memory.poke(mem_address +192, 12796);
+		do Memory.poke(mem_address +224, 16124);
+		do Memory.poke(mem_address +256, 16380);
+		do Memory.poke(mem_address +288, 16380);
+		do Memory.poke(mem_address +320, 8184);
+		do Memory.poke(mem_address +352, 128);
+		do Memory.poke(mem_address +384, 128);
+		do Memory.poke(mem_address +416, 448);
+		do Memory.poke(mem_address +448, 0);
+		do Memory.poke(mem_address +480, 0);
+		return;
+	}
+
+	/** Draws a bot head life icon for the status bar. */
+	function void draw_bot_life_icon(int row, int column) {
+		var int mem_address;
+		let mem_address = 16384 + (512 * row) + column;
+		do Memory.poke(mem_address, 0);
+		do Memory.poke(mem_address +32, 448);
+		do Memory.poke(mem_address +64, 128);
+		do Memory.poke(mem_address +96, 128);
+		do Memory.poke(mem_address +128, 8188);
+		do Memory.poke(mem_address +160, 16382);
+		do Memory.poke(mem_address +192, 14798);
+		do Memory.poke(mem_address +224, 14326);
+		do Memory.poke(mem_address +256, 14326);
+		do Memory.poke(mem_address +288, 14798);
+		do Memory.poke(mem_address +320, 16382);
+		do Memory.poke(mem_address +352, 16382);
+		do Memory.poke(mem_address +384, 16382);
+		do Memory.poke(mem_address +416, 8188);
+		do Memory.poke(mem_address +448, 0);
+		do Memory.poke(mem_address +480, 0);
+		return;
+	}
+
+}   //  ============================================================================

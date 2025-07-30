@@ -1,0 +1,127 @@
+//  ================================================================================
+//                                class WorldBrushPool
+//  ================================================================================
+
+/**
+ *  A pool of WorldBrush objects.
+ *
+ *  Instead of allocating each WorldBrush instance separately, it stores the
+ *  fields of all instances in a single array. Each slice of WORLD_BRUSH_LEN
+ *  fields may then be used as an actual WorldBrush instance by casting the
+ *  pointer to the WorldBrush type.
+ *
+ *
+ *  Important Constants
+ *  ===================
+ *
+ *  WORLD_BRUSH_POOL_SIZE = 64  // number of instances in the pool
+ *
+ */
+class WorldBrushPool {
+
+	//  ----------------------------------------------------------------------------
+	//                                     FIELDS
+	//  ----------------------------------------------------------------------------
+
+	field Array pool;
+
+	//  ----------------------------------------------------------------------------
+	//                          INITIALIZATION AND DISPOSAL
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Creates a new pool.
+	 *
+	 *  The contained WorldBrush instances are initialized to the inert state;
+	 *  they don't begin painting until told to do so.
+	 */
+	constructor WorldBrushPool new() {
+		var int i;
+		var WorldBrush brush;
+
+		let pool = Array.new(192);
+
+		// Initialize WORLD_BRUSH_POOL_SIZE instances
+		let i = 0;
+		while (i < 64) {
+			let brush = brush(i);
+			do brush.place(15, 0, 0); // cell state: EMPTY
+			let i = i + 1;
+		}
+
+		return this;
+	}
+
+	/**
+	 *  Disposes the WorldBrushPool.
+	 */
+	method void dispose() {
+		do pool.dispose();
+		do Memory.deAlloc(this);
+		return;
+	}
+
+	//  ----------------------------------------------------------------------------
+	//                                INSTANCE ACCESS
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Returns a pointer to the nth WorldBrush instance.
+	 */
+	method WorldBrush brush(int n) {
+		//
+		//  Each instance starts at the next multiple of WORLD_BRUSH_LEN
+		//  entries.
+		//
+		//  The statement below uses the following implicit conversions to
+		//  achieve the desired outcome:
+		//
+		//  0.  use the pool field as an integer containing a pointer to the
+		//      start of the array;
+		//
+		//  1.  add WORLD_BRUSH_LEN times n, to get a pointer to the start of
+		//      instance n;
+		//
+		//  2.  treat this new pointer as a WorldBrush instance, and return it.
+		//
+		return pool + (3 * n);
+	}
+
+	//  ----------------------------------------------------------------------------
+	//                                 UPDATE METHOD
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Calls the update method on all instances.
+	 */
+	method void update_all(int frame, CellState cell_state) {
+		var int array_offset;
+		var WorldBrush brush;
+
+		//  Iterate over all instances.
+		//
+		//  Each increase by WORLD_BRUSH_LEN moves the pointer
+		//  to the next WorldBrush instance.
+		//
+		//  The end of the array is
+		//  (WORLD_BRUSH_POOL_SIZE * WORLD_BRUSH_LEN = 192)
+		//  entries after the start.
+
+		let array_offset = 0;
+		while (array_offset < 192) {
+			let brush = pool + array_offset;
+			do brush.detect_pickups(cell_state);
+			let array_offset = array_offset + 3;
+		}
+
+		let array_offset = 0;
+		while (array_offset < 192) {
+			let brush = pool + array_offset;
+			do brush.update(frame, cell_state);
+			let array_offset = array_offset + 3;
+		}
+
+		return;
+	}
+
+}   //  ============================================================================

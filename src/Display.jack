@@ -1,0 +1,204 @@
+//  ================================================================================
+//                                  library Display
+//  ================================================================================
+
+/**
+ *  Support library for drawing various things to the screen.
+ *
+ *  For drawing individual sprites, see Sprites.jack.
+ *
+ *
+ *  Important Constants
+ *  ===================
+ *
+ *  Status bar fields:
+ *  -  BATTERY_AREA = 88    // leftmost pixel column of battery meter
+ *  -  BATTERY_WIDTH = 128  // width of battery meter in pixels
+ *  -  LIVES_AREA = 19      // leftmost sprite column of lives left
+ *  -  LIVES_MAX = 5        // maximum number of lives
+ *  -  SCORE_AREA = 58      // leftmost score digit position in text columns
+ *  -  SCORE_DIGITS = 4     // number of digits of score
+ *
+ */
+class Display {
+
+	//  ----------------------------------------------------------------------------
+	//                                    MESSAGES
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Puts a text string on the screen in the indicates position.
+	 *
+	 *  It takes ownership of the text argument, and disposes it after drawing.
+	 *  It is intended to be called with a string literal, like:
+	 *
+	 *  `draw_text(row, column, "text")`
+	 */
+	function void draw_text(int row, int column, String text) {
+		do Output.moveCursor(row, column);
+		do Output.printString(text);
+		do text.dispose();
+		return;
+	}
+
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Draws the 'obstacle hit' failure message.
+	 */
+	function void draw_obstacle_hit_message() {
+		do Screen.setColor(true);
+		do Screen.drawRectangle(112, 99, 191, 131);
+		do Screen.setColor(false);
+		do Screen.drawRectangle(113, 101, 190, 129);
+		do Display.draw_text(10, 16, "Bummer.");
+		return;
+	}
+
+	/**
+	 *  Draws the 'battery drained' failure message.
+	 */
+	function void draw_battery_drained_message() {
+		do Screen.setColor(true);
+		do Screen.drawRectangle(112, 99, 327, 131);
+		do Screen.setColor(false);
+		do Screen.drawRectangle(113, 101, 326, 129);
+		do Display.draw_text(10, 16, "The battery has drained.");
+		return;
+	}
+
+	/**
+	 *  Draws the 'game over' message.
+	 *
+	 *  The frame around this message completely covers the 'obstacle hit' and
+	 *  'battery drained' messages, so it can be drawn over those without the
+	 *  need for a full screen re-draw.
+	 */
+	function void draw_game_over_message() {
+		do Screen.setColor(true);
+		do Screen.drawRectangle(112, 77, 391, 153);
+		do Screen.setColor(false);
+		do Screen.drawRectangle(113, 79, 390, 151);
+		do Screen.setColor(true);
+		do Screen.drawRectangle(115, 83, 388, 147);
+		do Screen.setColor(false);
+		do Screen.drawRectangle(116, 85, 387, 145);
+		do Display.draw_text(10, 23, "G A M E   O V E R");
+		return;
+	}
+
+	//  ----------------------------------------------------------------------------
+	//                              EMPTY STAGE DRAWING
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Draws the initial floor and ceiling at the start of a game stage.
+	 *
+	 *  The parameters work the same as those used by CellState.reset.
+	 */
+	function void draw_floor_ceiling(int ceiling_thickness, int floor_thickness) {
+		var int column;
+		var int row;
+
+		let column = 0;
+		while (column < 32) {
+			let row = 0;
+			while (row < ceiling_thickness) {
+				do Sprites.draw_wall(row, column);
+				let row = row + 1;
+			}
+			let row = 15 - floor_thickness;
+			while (row < 15) {
+				do Sprites.draw_wall(row, column);
+				let row = row + 1;
+			}
+			let column = column + 1;
+		}
+		return;
+	}
+
+	//  ----------------------------------------------------------------------------
+	//                                   STATUS BAR
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Clears the status bar to white.
+	 */
+	function void clear_status_bar() {
+		var int mem_address;
+
+		let mem_address = 24064;
+		while (mem_address < 24576) {
+			do Memory.poke(mem_address, 0);
+			let mem_address = mem_address + 1;
+		}
+		return;
+	}
+
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Re-draws the static portions of the status bar.
+	 *
+	 *  There is a left margin of 16 pixels (2 character cells), in order to
+	 *  avoid the inactive entity drawing area. (See WorldBrush.jack.)
+	 */
+	function void draw_status_bar() {
+		do Display.clear_status_bar();
+		do Display.draw_text(
+			22,
+			2,
+			"Battery:                      Bots:              Score:"
+		);
+		return;
+	}
+
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Draws the battery meter indicating the provided level.
+	 *
+	 *  level must be between 0 and 127 inclusive.
+	 */
+	function void draw_battery_meter(int level) {
+		if (level > 0) {
+			do Screen.setColor(true);
+			do Screen.drawRectangle(88, 244, 87 + level, 251);
+		}
+		do Screen.setColor(false);
+		do Screen.drawRectangle(88 + level, 244, 215, 251);
+		return;
+	}
+
+	/**
+	 *  Draws the bots-left sprites in the status bar.
+	 */
+	function void draw_bots_left(int bots_left) {
+		var int drawn, x_pos;
+
+		let drawn = 0;
+		let x_pos = 19; // LIVES_AREA
+		while (drawn < bots_left) {
+			do Sprites.draw_bot_life_icon(15, x_pos);
+			let drawn = drawn + 1;
+			let x_pos = x_pos + 1;
+		}
+		return;
+	}
+
+	/**
+	 *  Draws the current score in the status bar.
+	 */
+	function void draw_score(int score) {
+		var int start_column;
+
+		let start_column = 61; // SCORE_AREA + SCORE_DIGITS - 1
+		if (score > 9) { let start_column = 60; }
+		if (score > 99) { let start_column = 59; }
+		if (score > 999) { let start_column = 58; }
+		do Output.moveCursor(22, start_column);
+		do Output.printInt(score);
+		return;
+	}
+
+}   //  ============================================================================

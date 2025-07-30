@@ -1,0 +1,150 @@
+//  ================================================================================
+//                                  class WorldBrush
+//  ================================================================================
+
+/**
+ *  Draws a part of the world.
+ *
+ *  The game world is made up of lots of repeating patterns, many of which are
+ *  long horizontal stretches of the same cell type. This can be stored very
+ *  efficiently by recording the places in each row where the cells change from
+ *  one type to another.
+ *
+ *  This format has the added benefit of being very quick to draw. Instead of
+ *  scrolling the whole screen, ony the changed cells need to be updated.
+ *
+ *  A WorldBrush instance represents one such change point. Each time its update
+ *  method is called with an even frame number, it moves one column to the left,
+ *  and then 'paints' its cell onto the screen. When it passes the player column
+ *  (see CellState.jack), it also updates the cell there.
+ *
+ *
+ *  Frame Rate Consistency
+ *  ======================
+ *
+ *  The WorldBrush instances only move to the left on even frame numbers,
+ *  however they also draw their cell (redundantly) on odd frame numbers.
+ *  Furthermore, all WorldBrush instances that are not currently travelling
+ *  across the screen are positioned in the bottom left corner, where they draw
+ *  an empty cell every frame.
+ *
+ *  These extra drawing operations do not contribute to the game visually, but
+ *  they do ensure that there is roughly the same amount of work to be done for
+ *  each frame, regardless of the complexity of the visible part of the world.
+ *  This helps with maintaining a somewhat constant frame rate.
+ *
+ *
+ *  Important Constants
+ *  ===================
+ *
+ *  WORLD_BRUSH_LEN = 3  // number of fields in a WorldBrush instance
+ *
+ */
+class WorldBrush {
+
+	//  ----------------------------------------------------------------------------
+	//                                     FIELDS
+	//  ----------------------------------------------------------------------------
+
+	// Important: update all uses of WORLD_BRUSH_LEN
+	// when adding or removing fields.
+	//
+	field int row;
+	field int column;
+	field int cell_type;
+
+	//  ----------------------------------------------------------------------------
+	//                          INITIALIZATION AND DISPOSAL
+	//  ----------------------------------------------------------------------------
+
+	//  This class has no constructor and no dispose method because WorldBrush
+	//  instances are managed by the WorldBrushPool. The place method, defined
+	//  below, also serves as the first-time initialization method for the
+	//  instances in the pool.
+
+	//  ----------------------------------------------------------------------------
+	//                                 CONFIGURATION
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Sets up a WorldBrush to begin painting at the indicated position.
+	 *
+	 *  During an update, the brush moves left first, and then it paints the
+	 *  cell. So p_column should be one more than the column where painting
+	 *  starts (typically 32 to start from the screen edge).
+	 */
+	method void place(int p_row, int p_column, int p_cell_type) {
+		let row = p_row;
+		let column = p_column;
+		let cell_type = p_cell_type;
+		return;
+	}
+
+	//  ----------------------------------------------------------------------------
+	//                                 UPDATE METHODS
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Detect chips picked up by the bot.
+	 *
+	 *  This runs before the normal update method. If the WorldBrush is in the
+	 *  BOT_COLUMN, it will set its cell type to the cell from cell_state.
+	 *  This makes picked up chips disappear from the screen.
+	 */
+	method void detect_pickups(CellState cell_state) {
+		if (column = 4) {
+			let cell_type = cell_state.get_cell(row);
+		}
+		return;
+	}
+
+	/**
+	 *  Moves the brush and paints a cell, as described in the class documentation.
+	 *
+	 *  Also updates the provided cell_state if moving into BOT_COLUMN.
+	 */
+	method void update(int frame, CellState cell_state) {
+		//
+		//  Movement and state changes (even frames only)
+		//
+		if ((frame & 1) = 0) {
+			if (column > 0) {
+				let column = column - 1;
+
+				// If we have reached the BOT_COLUMN, write the cell type.
+				if (column = 4) {
+					do cell_state.put_cell(row, cell_type);
+				}
+			} else {
+				// This instance is inert (reached column 0).
+				// Put it in the corner and make the cell type EMPTY.
+				let row = 15;
+				let cell_type = 0;
+			}
+		}
+
+		//
+		//  Cell painting
+		//
+
+		// EMPTY
+		if (cell_type = 0) { do Sprites.draw_empty(row, column); }
+		// WALL
+		if (cell_type = 1) { do Sprites.draw_wall(row, column); }
+		// CHARGER
+		if (cell_type = 3) { do Sprites.draw_charger_off(row, column); }
+		// SPIKES_LEFT
+		if (cell_type = 2) { do Sprites.draw_spikes_left(row, column); }
+		// SPIKES_UP
+		if (cell_type = 4) { do Sprites.draw_spikes_up(row, column); }
+		// SPIKES_DOWN
+		if (cell_type = 6) { do Sprites.draw_spikes_down(row, column); }
+		// CHIP_SMALL
+		if (cell_type = 8) { do Sprites.draw_chip_small(row, column); }
+		// CHIP_BIG
+		if (cell_type = 10) { do Sprites.draw_chip_big(row, column); }
+
+		return;
+	}
+
+}   //  ============================================================================

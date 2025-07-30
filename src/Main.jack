@@ -1,0 +1,61 @@
+//  ================================================================================
+//                                    library Main
+//  ================================================================================
+
+/**
+ *  Program entry point and game orchestration function.
+ *
+ *
+ *  Game Speed
+ *  ==========
+ *
+ *  The game's speed can be adjusted to make it easier or harder. The effective
+ *  speed also depends on the platform (browser-based VM emulator vs Java, for
+ *  example.) Look for GAME_LOOP_DELAY in Stage0.jack, and adjust the Sys.wait
+ *  call to your liking.
+ *
+ */
+class Main {
+
+	/**
+	 *  Program entry point.
+	 *
+	 *  It performs initializations, and then starts one game session. It
+	 *  returns when the player has lost all their bots (lives) or when they
+	 *  reach the end of the game.
+	 */
+	function void main() {
+		do Stats.init();
+		do Main.play_game();
+		return;
+	}
+
+	/**
+	 *  Orchestrates one game session.
+	 *
+	 *  It launches a new game, and starts Stage0, which is currently the only
+	 *  stage. It also displays the "Game Over" message if the player has lost
+	 *  all of their bots.
+	 */
+	function void play_game() {
+		do Stats.new_game();
+
+		while (Stats.take_bot()) {
+			if (Stage0.play()) {
+				// End of game reached
+				do Sys.wait(3000);
+				return;
+			}
+
+			// The bot was lost.
+			// Try again if there are any left, otherwise it's game over.
+			do Sys.wait(2000);
+		}
+
+		do Display.draw_game_over_message();
+		do Sys.wait(3000);
+
+		return;
+	}
+
+}   //  ============================================================================

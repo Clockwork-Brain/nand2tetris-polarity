@@ -1,0 +1,153 @@
+//  ================================================================================
+//                                  class WorldData
+//  ================================================================================
+
+/**
+ *  World data source.
+ *
+ *  An instance of this class is created at the start of a stage. Its update
+ *  function is called each game frame, and it configures some WorldBrush
+ *  instances to construct the next column of the game world at the right edge
+ *  of the screen.
+ *
+ *
+ *  World Data Format
+ *  =================
+ *
+ *  The world is defined as an array containing a series of column records.
+ *
+ *  Each column record describes the changes compared to the column before it.
+ *  More precisely, it dictates the placement of one or more WorldBrush
+ *  instances.
+ *
+ *  Only columns that have one or more WorldBrush placements need a record; many
+ *  columns don't have one because they are identical to their preceding column.
+ *
+ *  Each column record consists of:
+ *  -  a column number;
+ *  -  one or more WorldBrush placements.
+ *
+ *  Each WorldBrush placement consists of three integers specifying:
+ *  -  the index of a WorldBrush;
+ *  -  the row where the WorldBrush will be placed;
+ *  -  the cell type it will paint.
+ *
+ *  Columns numbers are even integers starting from 10002. Column 10002 is the
+ *  one that scrolls in from the right just after the game has started; column
+ *  10004 is the next one to the right; and so on.
+ *
+ *  This numbering scheme was chosen for two reasons.
+ *
+ *  -  The high starting number allows the update method to detect where
+ *     a column record ends: if the next value is less than 10000, it is a brush
+ *     placement; otherwise it is the start of the next record.
+ *
+ *  -  The use of only even numbers allows the column numbers to be easily
+ *     correlated with game frame numbers, so that the update method knows when
+ *     it is time to perform the next batch of WorldBrush updates (which must
+ *     happen on even frame numbers).
+ *
+ *     The first column is 10002 because the update method is never called for
+ *     frame 0, due to the design of the game loop.
+ *
+ *
+ *  End of Stage / End of Data Marker
+ *  ---------------------------------
+ *
+ *  The end of the stage is marked with a sentinel record containing:
+ *  -  a column number, and
+ *  -  the special value 10001.
+ *
+ *  Once this column enters the screen, no more data will be read, and the
+ *  update function will begin returning 1 instead of 0 to signal that the end
+ *  of the stage has been reached.
+ *
+ *
+ *  WorldBrush Re-use
+ *  =================
+ *
+ *  The WorldBrushPool contains a fixed number of WorldBrush instances, which
+ *  can be used multiple times during a given stage. However, if a WorldBrush is
+ *  re-used before it reaches the left edge of the screen, the row it was
+ *  painting will stop being updated. Once a WorldBrush has been placed, that
+ *  instance must not be used again within the next 32 columns.
+ *
+ */
+class WorldData {
+
+	//  ----------------------------------------------------------------------------
+	//                                     FIELDS
+	//  ----------------------------------------------------------------------------
+
+	field Array data;
+	field int current_index;
+
+	//  ----------------------------------------------------------------------------
+	//                          INITIALIZATION AND DISPOSAL
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Creates a WorldData instance.
+	 *
+	 *  The new instance takes ownership of p_data, and will de-allocate it when
+	 *  its dispose method is called.
+	 */
+	constructor WorldData new(Array p_data) {
+		let data = p_data;
+		let current_index = 0;
+		return this;
+	}
+
+	/**
+	 *  Disposes a WorldData instance.
+	 */
+	method void dispose() {
+		do data.dispose();
+		do Memory.deAlloc(this);
+		return;
+	}
+
+	//  ----------------------------------------------------------------------------
+	//                                 UPDATE METHOD
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Places WorldBrush instances to define the next world column.
+	 *
+	 *  Returns 1 when the end of the data stream is reached (indicating the end
+	 *  of the stage), or 0 otherwise. These values correspond with the return
+	 *  values of GameLoop.update.
+	 */
+	method int update(int frame, WorldBrushPool brush_pool) {
+		var WorldBrush brush;
+		var int brush_index, row, cell_type;
+
+		// If the next record is for the current frame, move the pointer past
+		// the frame number. This will enable the loop below to process the
+		// WorldBrush placements that follow.
+		//
+		if (data[current_index] = (10000 + frame)) {
+			let current_index = current_index + 1;
+		}
+
+		// Apply WorldBrush placements until the next number >= 10000.
+		//
+		while (data[current_index] < 10000) {
+			let brush_index = data[current_index];
+			let row         = data[current_index + 1];
+			let cell_type   = data[current_index + 2];
+
+			let brush = brush_pool.brush(brush_index);
+			do brush.place(row, 32, cell_type);
+
+			let current_index = current_index + 3;
+		}
+
+		// After the above loop, the current_index is on an even frame number
+		// (lowest bit is 0) or on the sentinel value 10001 (lowest bit is 1).
+		// Thus, isolating the lowest bit gives us the desired return value.
+		//
+		return data[current_index] & 1;
+	}
+
+}   //  ============================================================================

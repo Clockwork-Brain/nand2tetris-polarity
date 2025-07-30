@@ -1,0 +1,130 @@
+//  ================================================================================
+//                                  class CellState
+//  ================================================================================
+
+/**
+ *  State (contents) of the column of cells where the player character is.
+ *
+ *  It keeps track of the contents of each cell, and can return cell properties
+ *  like solidity. Since the player only moves within one column on the screen,
+ *  only one column of state needs to be maintained.
+ *
+ *  The state is updated in two ways.
+ *
+ *  -  Each WorldBrush traveling across the column sets one cell to the cell
+ *     type it's painting.
+ *
+ *  -  The player character (Bot.jack) scans its collision volume for
+ *     collectable cells. When it finds one, it changes it back to a blank cell.
+ *     The WorldBrush that placed the collectable cell then detects this change,
+ *     and updates its cell type accordingly. This causes picked up objects to
+ *     disappear from the screen.
+ *
+ *
+ *  Important Constants
+ *  ===================
+ *
+ *  Cell types:
+ *  -  EMPTY = 0
+ *  -  Solid cells that the player can stand on; must be odd numbers:
+ *     -  WALL = 1
+ *     -  CHARGER = 3
+ *  -  Hazards; must be even numbers:
+ *     -  SPIKES_LEFT = 2
+ *     -  SPIKES_UP = 4
+ *     -  SPIKES_DOWN = 6
+ *  -  Chips; must be even numbers:
+ *     -  CHIP_SMALL = 8,
+ *     -  CHIP_BIG = 10,
+ *
+ */
+class CellState {
+
+	//  ----------------------------------------------------------------------------
+	//                               CELLS ARRAY FIELD
+	//  ----------------------------------------------------------------------------
+
+	field Array cells;
+
+	//  ----------------------------------------------------------------------------
+	//                          INITIALIZATION AND DISPOSAL
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Returns an **un-initialized** CellState instance.
+	 *
+	 *  The reset method must be called to put the instance in a valid state
+	 *  after construction.
+	 */
+	constructor CellState new() {
+		let cells = Array.new(15);
+		return this;
+	}
+
+	/**
+	 *  Disposes a CellState instance.
+	 */
+	method void dispose() {
+		do cells.dispose();
+		do Memory.deAlloc(this);
+		return;
+	}
+
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  (Re)initializes the cells to an open space with a floor and ceiling.
+	 *
+	 *  After this method is called, the state contains:
+	 *  -  `ceiling_thickness` number of WALL cells at the top;
+	 *  -  `floor_thickness` number of WALL cells at the bottom;
+	 *  -  an open space of EMPTY cells in between.
+	 *
+	 *  This is used to initialize the cells at the start of a game stage.
+	 *  In order to establish visuals that match this state,
+	 *  Display.draw_floor_ceiling must also be called, with the same
+	 *  parameters.
+	 */
+	method void reset(int ceiling_thickness, int floor_thickness) {
+		var int cell_i;
+
+		let cell_i = 0;
+		while (cell_i < 15) {
+			if ((cell_i < ceiling_thickness) | (cell_i > (14 - floor_thickness))) {
+				let cells[cell_i] = 1; // WALL
+			} else {
+				let cells[cell_i] = 0; // EMPTY
+			}
+			let cell_i = cell_i + 1;
+		}
+		return;
+	}
+
+	//  ----------------------------------------------------------------------------
+	//                                ACCESSING CELLS
+	//  ----------------------------------------------------------------------------
+
+	/**
+	 *  Returns a cell state.
+	 */
+	method int get_cell(int row) {
+		return cells[row];
+	}
+
+	/**
+	 *  Returns true if the indicated cell is solid. (The player can stand on it.)
+	 */
+	method bool is_cell_solid(int row) {
+		// Odd numbers are solid.
+		return (cells[row] & 1) = 1;
+	}
+
+	/**
+	 *  Changes a cell to a different type.
+	 */
+	method void put_cell(int row, int cell) {
+		let cells[row] = cell;
+		return;
+	}
+
+}   //  ============================================================================
