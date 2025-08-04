@@ -209,7 +209,8 @@
 
 				let brushes = [];
 				for (let i = 0; i < 15; ++i) {
-					if (prev_cells[i] != cur_cells[i]) {
+					// cells >= 8 are pickups and must be repeated in each column.
+					if (cur_cells[i] != prev_cells[i] || cur_cells[i] >= 8) {
 						brushes.push([i, cur_cells[i]]);
 					}
 				}

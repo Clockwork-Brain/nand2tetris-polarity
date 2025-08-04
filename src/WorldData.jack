@@ -63,6 +63,18 @@
  *  of the stage has been reached.
  *
  *
+ *  Encoding Pickups
+ *  ----------------
+ *
+ *  Chips, and possibly other pickups in the future, are also encoded using
+ *  WorldBrush instances. When an item is picked up, its WorldBrush is changed
+ *  to the empty cell so it disappears from the screen. This is also used for
+ *  keeping score.
+ *
+ *  This means that each pickup needs its own WorldBrush, even if there are more
+ *  than one of the same type in a row.
+ *
+ *
  *  WorldBrush Re-use
  *  =================
  *
